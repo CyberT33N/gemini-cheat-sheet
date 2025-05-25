@@ -12,6 +12,477 @@ ___
 <br><br>
 
 
+
+# NPM @google/genai
+- https://www.npmjs.com/package/@google/genai
+
+
+
+# Docs
+
+<details><summary>Click to expand..</summary>
+
+Das Google Gen AI JavaScript SDK ermöglicht Entwicklern, Anwendungen mit Gemini zu erstellen. Es unterstützt sowohl die Gemini Developer API als auch Vertex AI und ist für Gemini 2.0+ Features ausgelegt.
+
+**Wichtige Hinweise:**
+*   **API-Key-Sicherheit:** API-Keys **niemals** im Client-seitigen Code exponieren. Für Produktionsumgebungen serverseitige Implementierungen verwenden.
+*   **Dokumentation:** [Offizielle Dokumentation](https://googleapis.github.io/js-genai/)
+
+## Voraussetzungen
+
+*   Node.js Version 18 oder höher
+
+## Installation
+
+```bash
+npm install @google/genai
+```
+
+## Quickstart (Gemini Developer API)
+
+```javascript
+import { GoogleGenAI } from '@google/genai';
+
+// API Key aus Umgebungsvariablen laden (empfohlen)
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// Initialisierung für Gemini Developer API
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+async function main() {
+  // Modell auswählen (z.B. 'gemini-1.5-flash', 'gemini-1.0-pro')
+  const model = 'gemini-1.5-flash-latest'; // Oder ein spezifisches Modell wie 'gemini-1.5-flash-001'
+
+  const response = await ai.models.generateContent({
+    model: model,
+    contents: [{ role: 'user', parts: [{ text: 'Warum ist der Himmel blau?' }] }],
+  });
+  console.log(response.text);
+}
+
+main();
+```
+
+## Initialisierung (`GoogleGenAI` Klasse)
+
+Die Kernklasse für den Zugriff auf alle API-Funktionen.
+
+### 1. Gemini Developer API (Server-seitig & Browser)
+
+```javascript
+import { GoogleGenAI } from '@google/genai';
+const ai = new GoogleGenAI({ apiKey: 'DEIN_GEMINI_API_KEY' });
+```
+> **Achtung (Browser):** API-Keys nicht im Client-Code hardcoden! Serverseitige Lösungen für Produktionsanwendungen verwenden.
+
+### 2. Vertex AI
+
+```javascript
+import { GoogleGenAI } from '@google/genai';
+
+const ai = new GoogleGenAI({
+    vertexai: true,
+    project: 'DEIN_GOOGLE_CLOUD_PROJEKT_ID',
+    location: 'DEINE_GOOGLE_CLOUD_REGION', // z.B. 'us-central1'
+});
+```
+
+### API-Version auswählen
+
+Standardmäßig werden Beta-Endpunkte verwendet. Für stabile Endpunkte `v1` setzen:
+
+**Vertex AI mit `v1`:**
+```javascript
+const ai = new GoogleGenAI({
+    vertexai: true,
+    project: 'DEIN_PROJEKT',
+    location: 'DEINE_REGION',
+    apiVersion: 'v1' // oder 'v1beta'
+});
+```
+
+**Gemini Developer API mit `v1beta` (oder spezifischer):**
+```javascript
+const ai = new GoogleGenAI({
+    apiKey: 'DEIN_API_KEY',
+    apiVersion: 'v1beta' // oder z.B. 'v1alpha' für experimentelle Features
+});
+```
+
+## `GoogleGenAIOptions` (Konfigurationsoptionen)
+
+Wichtige Optionen für den `GoogleGenAI` Konstruktor:
+
+*   `apiKey?: string`: Erforderlich für Gemini Developer API.
+*   `vertexai?: boolean`: `true` für Vertex AI, `false` (oder nicht gesetzt) für Gemini Developer API.
+*   `project?: string`: Erforderlich für Vertex AI (Google Cloud Projekt ID).
+*   `location?: string`: Erforderlich für Vertex AI (Google Cloud Region).
+*   `apiVersion?: string`: API-Version (z.B. `v1`, `v1beta`).
+*   `googleAuthOptions?`: Authentifizierungsoptionen für Vertex AI (Node.js).
+*   `httpOptions?`: HTTP-Request Konfiguration.
+
+## `GoogleGenAI` Submodule Übersicht
+
+Alle API-Features sind über eine Instanz der `GoogleGenAI`-Klasse zugänglich.
+
+*   `ai.models`: Modelle abfragen (Inhalt generieren, Bilder, Embeddings etc.), Metadaten untersuchen.
+*   `ai.caches`: Caches erstellen und verwalten, um Kosten bei wiederholter Verwendung großer Prompt-Präfixe zu senken.
+*   `ai.chats`: Lokale, zustandsbehaftete Chat-Objekte für vereinfachte Multi-Turn-Interaktionen erstellen.
+*   `ai.files`: Dateien zur API hochladen und in Prompts referenzieren (reduziert Bandbreite, handhabt große Dateien).
+*   `ai.live` (Experimentell): Live-Sitzungen für Echtzeitinteraktion (Text, Audio, Video Input; Text, Audio Output).
+*   `ai.operations`: Status von langlaufenden Operationen abfragen (z.B. Videoerstellung).
+*   `ai.tunings` (Experimentell): Fine-Tuning von Modellen verwalten.
+
+## Kernfunktionen
+
+### Inhalt generieren (`ai.models.generateContent`)
+
+```javascript
+async function generate() {
+  const response = await ai.models.generateContent({
+    model: 'gemini-1.5-flash-latest',
+    contents: [{ role: 'user', parts: [{ text: 'Erzähle einen Witz.' }] }],
+    // Optionale Konfiguration:
+    config: {
+      candidateCount: 1,
+      maxOutputTokens: 100,
+      temperature: 0.7,
+      // safetySettings, stopSequences, etc.
+    }
+  });
+  console.log(response.text);
+  // response.candidates enthält alle generierten Kandidaten
+  // response.promptFeedback enthält Feedback zum Prompt
+}
+```
+
+**Struktur des `contents` Arguments:**
+Kann sein:
+*   `Content`: Wird in `Content[]` verpackt.
+*   `Content[]`: Direkte Verwendung. Struktur: `[{ role: 'user' | 'model', parts: [Part, ...] }, ...]`.
+*   `Part | string`: Wird zu `Content` mit `role: 'user'` und in `Content[]` verpackt.
+*   `Part[] | string[]`: Wird zu einem einzigen `Content` mit `role: 'user'` und in `Content[]` verpackt.
+*   **Wichtig:** Für `FunctionCall` und `FunctionResponse` Parts muss die volle `Content[]` Struktur explizit angegeben werden.
+
+### Streaming (`ai.models.generateContentStream`)
+
+Für schnellere, responsive Interaktionen.
+
+```javascript
+async function streamContent() {
+  const responseStream = await ai.models.generateContentStream({
+    model: 'gemini-1.5-flash-latest',
+    contents: [{ role: 'user', parts: [{ text: 'Schreibe ein kurzes Gedicht über Code.' }] }],
+  });
+
+  let fullText = "";
+  for await (const chunk of responseStream) {
+    // chunk.text liefert den Text des aktuellen Chunks
+    // chunk.candidates, chunk.promptFeedback etc. sind auch verfügbar
+    if (chunk.text) {
+      fullText += chunk.text;
+      process.stdout.write(chunk.text); // Gibt Chunks direkt aus
+    }
+  }
+  console.log('\n\n--- Vollständiger Text ---\n', fullText);
+}
+```
+
+### Function Calling
+
+Ermöglicht Gemini, mit externen Systemen zu interagieren.
+**4 Schritte:**
+1.  Funktionsname, Beschreibung und Parameter deklarieren.
+2.  `generateContent` mit aktivierter Funktionsaufruf-Option aufrufen.
+3.  Die zurückgegebenen `FunctionCall`-Parameter verwenden, um die tatsächliche Funktion aufzurufen.
+4.  Das Ergebnis als `FunctionResponse` zurück an das Modell senden (einfacher mit `ai.chat`).
+
+```javascript
+import { FunctionCallingConfigMode, FunctionDeclaration, Type } from '@google/genai';
+
+async function callFunction() {
+  const controlLightDeclaration: FunctionDeclaration = {
+    name: 'controlLight',
+    description: 'Helligkeit und Farbtemperatur eines Raumlichts einstellen.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        brightness: { type: Type.NUMBER, description: 'Lichtlevel 0-100' },
+        colorTemperature: { type: Type.STRING, description: '`daylight`, `cool`, oder `warm`' },
+      },
+      required: ['brightness', 'colorTemperature'],
+    },
+  };
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-1.5-flash-latest', // Ein Modell, das Function Calling unterstützt
+    contents: [{ role: 'user', parts: [{ text: 'Dimme das Licht, damit der Raum gemütlich und warm wirkt.' }] }],
+    config: {
+      toolConfig: {
+        functionCallingConfig: {
+          mode: FunctionCallingConfigMode.ANY, // Oder .AUTO, .NONE
+          allowedFunctionNames: ['controlLight'],
+        }
+      },
+      tools: [{ functionDeclarations: [controlLightDeclaration] }]
+    }
+  });
+
+  if (response.functionCalls && response.functionCalls.length > 0) {
+    console.log('Funktionsaufruf angefordert:', response.functionCalls[0]);
+    // Hier die Funktion `controlLight` mit `response.functionCalls[0].args` aufrufen
+    // und das Ergebnis zurück an das Modell senden.
+  } else {
+    console.log('Kein Funktionsaufruf, normale Antwort:', response.text);
+  }
+}
+```
+
+### Chat (`ai.chats`)
+
+Für zustandsbehaftete Konversationen.
+
+**1. Chat-Sitzung erstellen (`ai.chats.create`)**
+```javascript
+const chat = ai.chats.create({
+  model: 'gemini-1.5-flash-latest',
+  // Optionale globale Konfiguration für diese Chat-Sitzung
+  config: {
+    temperature: 0.8,
+    maxOutputTokens: 500,
+  },
+  // Optionaler Startverlauf
+  history: [
+    { role: 'user', parts: [{ text: 'Hallo KI.' }] },
+    { role: 'model', parts: [{ text: 'Hallo! Wie kann ich dir helfen?' }] }
+  ]
+});
+```
+
+**2. Nachrichten senden (`chat.sendMessage` oder `chat.sendMessageStream`)**
+```javascript
+async function chatWithAI() {
+  const chat = ai.chats.create({ model: 'gemini-1.5-flash-latest' });
+
+  // Nicht-Streaming
+  let response = await chat.sendMessage({ message: 'Was ist die Hauptstadt von Frankreich?' });
+  console.log('AI:', response.text);
+
+  // Streaming
+  const streamResponse = await chat.sendMessageStream({ message: 'Erzähle mir mehr darüber.' });
+  process.stdout.write('AI (streaming): ');
+  for await (const chunk of streamResponse) {
+    if (chunk.text) process.stdout.write(chunk.text);
+  }
+  console.log();
+
+  // Verlauf abrufen
+  const history = chat.getHistory(); // curated: false (default) für kompletten Verlauf
+  // const curatedHistory = chat.getHistory(true); // für bereinigten Verlauf
+  console.log('\nChat Verlauf:', history);
+}
+```
+
+### Embeddings (`ai.models.embedContent`)
+
+Text in Vektorrepräsentationen umwandeln.
+
+```javascript
+async function getEmbeddings() {
+  const response = await ai.models.embedContent({
+    model: 'text-embedding-004', // Oder ein anderes Embedding-Modell
+    contents: [
+      { role: 'user', parts: [{ text: 'Was ist dein Name?' }] },
+      { role: 'user', parts: [{ text: 'Was ist deine Lieblingsfarbe?' }] }
+    ],
+    // config: { outputDimensionality: 64 } // Optional
+  });
+  console.log(response.embeddings); // Array von ContentEmbedding Objekten
+}
+```
+
+### Token zählen (`ai.models.countTokens`)
+
+```javascript
+async function countMyTokens() {
+  const response = await ai.models.countTokens({
+    model: 'gemini-1.5-flash-latest',
+    contents: [{ role: 'user', parts: [{ text: 'Der schnelle braune Fuchs springt über den faulen Hund.' }] }],
+  });
+  console.log('Total Tokens:', response.totalTokens);
+}
+```
+
+### Bilder generieren (`ai.models.generateImages`)
+
+(Benötigt ein Bildgenerierungsmodell wie `imagen-3.0-generate-002` - primär über Vertex AI)
+
+```javascript
+async function generateImage() {
+  // Dieses Beispiel funktioniert typischerweise besser mit Vertex AI Konfiguration
+  // const vertexAi = new GoogleGenAI({ vertexai: true, project: '...', location: '...' });
+  try {
+    const response = await ai.models.generateImages({ // oder vertexAi.models.generateImages
+      model: 'imagen-3.0-generate-002', // Beispielmodell
+      prompt: 'Ein Roboter, der ein rotes Skateboard hält',
+      config: {
+        numberOfImages: 1,
+        // includeRaiReason: true, // Für Responsible AI Infos
+      },
+    });
+    // response.generatedImages[0].image.imageBytes (Base64-codierte Bilddaten)
+    console.log('Bild generiert (Details in response Objekt).');
+  } catch (e) {
+    console.error("Fehler bei der Bildgenerierung:", e);
+  }
+}
+```
+
+### Dateien verwalten (`ai.files`)
+
+(Primär für Gemini Developer API)
+
+```javascript
+// Beispiel: Datei hochladen (Node.js Pfad oder Blob)
+async function uploadMyFile() {
+  try {
+    const file = await ai.files.upload({
+      file: 'pfad/zu/deiner/datei.txt', // oder ein File/Blob Objekt im Browser
+      config: {
+        mimeType: 'text/plain', // Wird oft automatisch erkannt
+        displayName: 'Meine Testdatei'
+      }
+    });
+    console.log('Datei hochgeladen:', file.name, file.uri); // file.name ist die Referenz für Prompts
+
+    // Datei in einem Prompt verwenden (Beispiel, braucht Anpassung im `contents` Format)
+    // const promptWithFile = `Analysiere diese Datei: ${file.uri}`;
+
+    // Dateiinformationen abrufen
+    const fileInfo = await ai.files.get({ name: file.name });
+    console.log('Dateiinfo:', fileInfo);
+
+    // Dateien auflisten
+    const fileListPager = await ai.files.list({ config: { pageSize: 10 } });
+    for await (const listedFile of fileListPager) {
+      console.log('Gelistete Datei:', listedFile.name);
+    }
+
+    // Datei löschen
+    // await ai.files.delete({ name: file.name });
+    // console.log('Datei gelöscht.');
+
+  } catch (e) {
+    console.error("Fehler bei Dateioperation:", e);
+  }
+}
+```
+> **Hinweis:** `ai.files.download()` ist nur für Node.js verfügbar.
+
+### Caching (`ai.caches`)
+
+Reduziert Kosten durch Caching von Prompt-Präfixen (für spezifische Modelle).
+
+```javascript
+async function manageCache() {
+  // Erfordert ein Modell, das Caching unterstützt
+  const modelName = 'gemini-1.5-flash-latest'; // Überprüfen, ob das Modell Caching unterstützt
+
+  try {
+    const contentsToCache = [ /* ... Große Content-Objekte ... */ ];
+    const cacheResponse = await ai.caches.create({
+      model: modelName,
+      config: {
+        contents: contentsToCache,
+        displayName: 'Mein Test-Cache',
+        // systemInstruction: '...', // Optional
+        ttl: '86400s', // Time To Live (z.B. 1 Tag)
+      }
+    });
+    console.log('Cache erstellt:', cacheResponse.name);
+
+    // Cache abrufen, auflisten, aktualisieren, löschen mit:
+    // ai.caches.get({ name: cacheResponse.name });
+    // ai.caches.list();
+    // ai.caches.update({ name: cacheResponse.name, config: { ttl: '...' } });
+    // ai.caches.delete({ name: cacheResponse.name });
+  } catch (e) {
+    console.error("Cache-Fehler:", e.message);
+  }
+}
+```
+
+### Pagers
+
+Viele `list*` Methoden (z.B. `ai.files.list()`, `ai.caches.list()`) geben ein `Pager`-Objekt zurück.
+
+```javascript
+async function iterateWithPager() {
+  const filesPager = await ai.files.list({ config: { pageSize: 5 } }); // Max 5 pro Seite
+
+  // Alle Elemente über alle Seiten hinweg iterieren
+  console.log("Alle Dateien:");
+  for await (const file of filesPager) {
+    console.log(file.name);
+  }
+
+  // Manuelle Paginierung (Beispiel)
+  const modelsPager = await ai.models.list(); // Standard Seitengröße
+  let currentPageItems = modelsPager.page;
+  console.log("\nModelle (Seite 1):", currentPageItems.map(m => m.name));
+
+  if (modelsPager.hasNextPage()) {
+    currentPageItems = await modelsPager.nextPage();
+    console.log("Modelle (Seite 2):", currentPageItems.map(m => m.name));
+  }
+}
+```
+**Pager Eigenschaften/Methoden:**
+*   `pager.page`: `T[]` - Aktuelle Seite mit Elementen.
+*   `pager.hasNextPage(): boolean` - Gibt es weitere Seiten?
+*   `pager.nextPage(): Promise<T[]>` - Lädt die nächste Seite.
+*   `pager[Symbol.asyncIterator]()`: Ermöglicht `for await...of`.
+
+## Unterschiede zu anderen Google AI SDKs
+
+*   `@google/genai`: "Vanilla" SDK von Google DeepMind für generative KI. Hier werden neue KI-Features zuerst hinzugefügt. Unterstützt Modelle auf Vertex AI und der Gemini Developer Plattform.
+*   `@google/generative_language` & `@google-cloud/vertexai`: Frühere Versionen, erhalten keine neuen Gemini 2.0+ Features mehr.
+
+## Typen (`@google/genai/types`)
+
+Das Modul `types` enthält alle relevanten Enums, Interfaces und Typ-Aliase (z.B. `Content`, `Part`, `FunctionDeclaration`, `SafetySetting` etc.), die für die Arbeit mit dem SDK benötigt werden. Diese werden oft direkt importiert, z.B.:
+`import { HarmCategory, HarmBlockThreshold } from '@google/genai';`
+
+---
+
+Dieses Cheatsheet deckt die wichtigsten Aspekte ab. Für detaillierte Informationen und alle Optionen immer die [offizielle Dokumentation](https://googleapis.github.io/js-genai/) konsultieren.
+   
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br><br>
+<br><br>
+
+<details><summary>Click to expand..</summary>
+
+
+
 # Embeddings
 
 
@@ -585,4 +1056,5 @@ async function useChromaWithGemini() {
   
 </details>
 
-
+  
+</details>
