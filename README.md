@@ -20,6 +20,7 @@ ___
 
 
 # Google Gemini & Text Embedding Modelle – Übersicht
+- https://ai.google.dev/gemini-api/docs/models#embedding
 
 
 <details><summary>Click to expand..</summary>
