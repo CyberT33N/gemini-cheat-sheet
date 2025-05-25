@@ -101,6 +101,16 @@ Dieses Cheatsheet sollte dir helfen, schnell das passende Google Embedding-Model
 
 
 
+
+
+
+
+
+
+
+
+
+
 <br><br>
 <br><br>
 
@@ -113,6 +123,8 @@ Dieses Cheatsheet sollte dir helfen, schnell das passende Google Embedding-Model
 
 
 ## Embeddings generieren
+
+<details><summary>Click to expand..</summary>
 
 Mit der Methode `embedContent` des GoogleGenAI SDKs können Text-Embeddings erstellt werden.
 
@@ -150,10 +162,15 @@ generateEmbedding();
 ```
 
 
+</details>
 
 
 
-## 3. Embeddings kürzen (`outputDimensionality`)
+
+
+## Embeddings kürzen (`outputDimensionality`)
+
+<details><summary>Click to expand..</summary>
 
 Einige neuere Modelle (wie `text-embedding-004` und `gemini-embedding-exp-03-07`) unterstützen die Reduzierung der Output-Dimensionen.
 
@@ -196,11 +213,13 @@ async function getTruncatedEmbedding(textToEmbed, targetDimension, modelName = "
 ```
 *Hinweis: Das `embedding-001` Modell unterstützt `outputDimensionality` nicht.*
 
-
+</details>
 
 
 
 ### Batch-Embeddings erstellen
+
+<details><summary>Click to expand..</summary>
 
 Du kannst Embeddings für mehrere Text-Chunks gleichzeitig erstellen, indem du ein Array von Strings an `contents` übergibst:
 
@@ -219,7 +238,13 @@ const response = await ai.models.embedContent({
 console.log(response.embeddings);
 ```
 
+
+</details>
+
+
 ## Task Types (Aufgabentypen)
+
+<details><summary>Click to expand..</summary>
 
 Für Systeme wie Retrieval Augmented Generation (RAG) ist es wichtig, dass die Embeddings für die spezifische Aufgabe optimiert sind. Fragen und Antworten sind semantisch oft nicht direkt ähnlich (z.B. "Warum ist der Himmel blau?" vs. "Lichtstreuung...").
 
@@ -282,6 +307,7 @@ Die Gemini API bietet folgende Modelle zur Erstellung von Text-Embeddings:
 Wähle das Modell, das am besten zu deinen Anforderungen an Kosten, Qualität und unterstützte Features (wie Task Types) passt.
 
 
+</details>
 
 
 
@@ -295,11 +321,14 @@ Wähle das Modell, das am besten zu deinen Anforderungen an Kosten, Qualität un
 
 
 
+# Beispiele
+
+<details><summary>Click to expand..</summary>
 
 
+## Beispiel: Search Reranking (Konzept in Node.js)
 
-
-## 5. Beispiel: Search Reranking (Konzept in Node.js)
+<details><summary>Click to expand..</summary>
 
 Das Python-Beispiel für Search Reranking ist komplex und involviert Wikipedia-API-Aufrufe, Function Calling und Numpy. Hier ist eine vereinfachte konzeptionelle Darstellung in Node.js, die den Kern des Rerankings mit Embeddings zeigt.
 
@@ -380,7 +409,12 @@ async function rerankSearchResults(userQuery, searchResultsTexts, embeddingModel
 // rerankSearchResults(userQuery, initialSearchResults, "models/gemini-embedding-exp-03-07");
 ```
 
-## 6. Beispiel: Integration mit ChromaDB (Konzept in Node.js)
+</details>
+
+
+## Integration mit ChromaDB (Konzept in Node.js)
+
+<details><summary>Click to expand..</summary>
 
 ChromaDB hat einen offiziellen JavaScript-Client (`chromadb`). Hier ist ein konzeptioneller Ablauf:
 
@@ -495,7 +529,26 @@ async function useChromaWithGemini() {
 // useChromaWithGemini();
 ```
 
+</details>
+
+</details>
+
+
+
+
+
+
+
+
+
+
+
+<br><br>
+<br><br>
+
 ## API Referenz-Punkte (Node.js relevant)
+
+<details><summary>Click to expand..</summary>
 
 *   **`ai.models.embedContent(request)`**:
     *   `request.model`: String (z.B. `"models/text-embedding-004"`)
@@ -528,7 +581,7 @@ async function useChromaWithGemini() {
 
 **Hinweis:** Die Beispiele für "Anomaly Detection" und "Train a text classifier" sind komplexer und erfordern ML-Bibliotheken, die über den reinen Embedding-Prozess hinausgehen (wie `sklearn`, `pandas`, `keras` in Python). Eine direkte 1:1-Umwandlung in einfaches Node.js ohne äquivalente ML-Bibliotheken (z.B. `tensorflow.js` oder spezialisierte Pakete) ist sehr aufwendig und würde den Rahmen dieses Embedding-Cheatsheets sprengen. Die Kernidee (Embeddings erstellen und dann als Features für ML-Modelle nutzen) bleibt jedoch gleich.
 
-
+</details>
   
 </details>
 
