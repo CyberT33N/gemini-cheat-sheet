@@ -479,7 +479,6 @@ Dieses Cheatsheet deckt die wichtigsten Aspekte ab. Für detaillierte Informatio
 <br><br>
 <br><br>
 
-<details><summary>Click to expand..</summary>
 
 
 
@@ -1053,8 +1052,7 @@ async function useChromaWithGemini() {
 **Hinweis:** Die Beispiele für "Anomaly Detection" und "Train a text classifier" sind komplexer und erfordern ML-Bibliotheken, die über den reinen Embedding-Prozess hinausgehen (wie `sklearn`, `pandas`, `keras` in Python). Eine direkte 1:1-Umwandlung in einfaches Node.js ohne äquivalente ML-Bibliotheken (z.B. `tensorflow.js` oder spezialisierte Pakete) ist sehr aufwendig und würde den Rahmen dieses Embedding-Cheatsheets sprengen. Die Kernidee (Embeddings erstellen und dann als Features für ML-Modelle nutzen) bleibt jedoch gleich.
 
 </details>
-  
-</details>
+
 
   
 </details>
